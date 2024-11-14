@@ -17,7 +17,7 @@ UMKM-KU API is a backend service for managing user registrations and logins for 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/umkm-ku-api.git
+   git clone https://github.com/UMKM-Ku/umkm-ku-api.git
    cd umkm-ku-api
    ```
 
