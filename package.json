@@ -1,0 +1,31 @@
+{
+  "name": "umkm-ku-api",
+  "version": "1.0.0",
+  "description": "API for UMKM-KU a P2P Lending web application. ",
+  "main": "./src/server.ts",
+  "scripts": {
+    "server": "nodemon",
+    "seed": "ts-node prisma/seed.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "manday",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/bcrypt": "^5.0.2",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-validator": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.9.0",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
