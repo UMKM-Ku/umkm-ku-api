@@ -8,12 +8,31 @@ const prisma = new PrismaClient();
 
 async function RegisterLender(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, email, password, phoneNumber, birthDate, identityNumber, identityCard, accountNumber } = req.body;
+        const { name, email, password, phoneNumber, birthDate, identityNumber, accountNumber, address } = req.body;
 
         const findUser = await prisma.user.findUnique({ where: { email } });
 
         if (findUser) throw new Error("Email is already in use");
 
+        if (!req.file) {
+            throw new Error("Identity card file is required");
+        }
+
+        const existingLender = await prisma.lender.findUnique({
+            where: { identityNumber },
+        });
+        if (existingLender) {
+            throw new Error("Identity Number is already in use");
+        }
+
+        const existingAccountNumber = await prisma.lender.findUnique({
+            where: { accountNumber },
+        });
+        if (existingAccountNumber) {
+            throw new Error("Account Number is already in use");
+        }
+
+        const identityCardPath = req.file.path;
         const salt = await genSalt(10);
         const hashedPassword = await hash(password, salt);
 
@@ -28,20 +47,28 @@ async function RegisterLender(req: Request, res: Response, next: NextFunction) {
                 email,
                 password: hashedPassword,
                 phoneNumber,
-                identityNumber,
-                identityCard,
-                accountNumber,
                 roleId: lenderRole.id,
                 statusId: 1,
                 lender: {
                     create: {
+                        identityNumber,
+                        identityCard: identityCardPath,
+                        accountNumber,
+                        address,
                         birthDate: new Date(birthDate),
                     }
                 },
             },
         });
 
-        res.status(201).json({ message: 'User registered successfully', data: user });
+        res.status(201).json({
+            message: 'User registered successfully',
+            data: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            }
+        });
 
     } catch (error) {
         next(error);
@@ -50,11 +77,31 @@ async function RegisterLender(req: Request, res: Response, next: NextFunction) {
 
 async function RegisterBorrower(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, email, password, phoneNumber, identityNumber, identityCard, address, npwp, accountNumber } = req.body;
+        const { name, email, password, phoneNumber, identityNumber, address, npwp, accountNumber, isInstituion } = req.body;
 
         const findUser = await prisma.user.findUnique({ where: { email } });
 
+        if (!req.files || !(req.files as { [fieldname: string]: Express.Multer.File[] })['identityCard']) {
+            throw new Error("Identity card file is required");
+        }
+
+        const identityCardPath = (req.files as { [fieldname: string]: Express.Multer.File[] })["identityCard"][0].path;
+
         if (findUser) throw new Error("Email is already in use");
+
+        const existingBorrower = await prisma.borrower.findUnique({
+            where: { identityNumber },
+        });
+        if (existingBorrower) {
+            throw new Error("Identity Number is already in use");
+        }
+
+        const existingAccountNumber = await prisma.lender.findUnique({
+            where: { accountNumber },
+        });
+        if (existingAccountNumber) {
+            throw new Error("Account Number is already in use");
+        }
 
         const salt = await genSalt(10);
         const hashedPassword = await hash(password, salt);
@@ -64,27 +111,61 @@ async function RegisterBorrower(req: Request, res: Response, next: NextFunction)
             borrowerRole = await prisma.role.create({ data: { name: "Borrower" } });
         }
 
+        const borrowerData: {
+            address: string;
+            identityNumber: string;
+            identityCard: string;
+            accountNumber: string;
+            npwp: string;
+            isInstituion: boolean;
+            documents?: { create: { type: string; filePath: string; }[] };
+        } = {
+            address,
+            identityNumber,
+            identityCard: identityCardPath,
+            accountNumber,
+            npwp,
+            isInstituion: isInstituion === "true",
+        };
+
+        if (borrowerData.isInstituion) {
+            if (!req.files || !(req.files as { [fieldname: string]: Express.Multer.File[] })['document']) {
+                throw new Error("Document file is required");
+            }
+
+            const documentPath = (req.files as { [fieldname: string]: Express.Multer.File[] })["document"][0].path;
+            borrowerData.documents = {
+                create: [
+                    {
+                        type: "institution_document",
+                        filePath: documentPath
+                    }
+                ]
+            }
+        }
+
         const user = await prisma.user.create({
             data: {
                 name,
                 email,
                 password: hashedPassword,
                 phoneNumber,
-                identityNumber,
-                identityCard,
-                accountNumber,
                 roleId: borrowerRole.id,
                 statusId: 1,
                 borrower: {
-                    create: {
-                        address,
-                        npwp,
-                    },
+                    create: borrowerData
                 },
             },
         });
 
-        res.status(201).json({ message: 'User registered successfully', data: user });
+        res.status(201).json({
+            message: 'User registered successfully',
+            data: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            }
+        });
 
     } catch (error) {
         next(error);

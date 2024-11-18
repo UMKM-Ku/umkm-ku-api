@@ -20,8 +20,8 @@ export const RegisterLenderValidation = [
     body('identityNumber')
         .notEmpty().withMessage('Identity number is required')
         .isLength({ min: 16, max: 16 }).withMessage('Identity number must be 16 characters long'),
-    body('identityCard')
-        .notEmpty().withMessage('Identity card is required'),
+    body('address')
+        .notEmpty().withMessage('Address is required'),
     body('accountNumber')
         .notEmpty().withMessage('Account number is required'),
     (req: Request, res: Response, next: NextFunction) => {
@@ -53,14 +53,30 @@ export const RegisterBorrowerValidation = [
     body('identityNumber')
         .notEmpty().withMessage('Identity number is required')
         .isLength({ min: 16, max: 16 }).withMessage('Identity number must be 16 characters long'),
-    body('identityCard')
-        .notEmpty().withMessage('Identity card is required'),
     body('address')
         .notEmpty().withMessage('Address is required'),
     body('npwp')
         .notEmpty().withMessage('NPWP is required'),
     body('accountNumber')
         .notEmpty().withMessage('Account number is required'),
+    (req: Request, res: Response, next: NextFunction) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const error = new Error('Validation Error');
+            error.name = 'ValidationError';
+            (error as any).errors = errors.array();
+            return next(error);
+        }
+        next();
+    }
+];
+
+export const LoginValidation = [
+    body('email')
+        .notEmpty().withMessage("Email is required")
+        .isEmail().withMessage('Invalid email format'),
+    body('password')
+        .notEmpty().withMessage('Password is required'),
     (req: Request, res: Response, next: NextFunction) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

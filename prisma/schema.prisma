@@ -26,60 +26,142 @@ model UserStatus {
 }
 
 model User {
-  id               Int             @id @default(autoincrement())
-  name             String          @db.VarChar(255)
-  email            String          @unique
-  password         String
-  phoneNumber      String          @db.VarChar(20)
-  identityNumber   String          @db.VarChar(16)
-  identityCard     String
-  accountNumber    String          @unique @db.VarChar(50)
-  roleId           Int
-  role             Role            @relation(fields: [roleId], references: [id])
-  lender           Lender?
-  borrower         Borrower?
-  statusId         Int             @default(1)
-  status           UserStatus      @relation(fields: [statusId], references: [id])
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  FundingRequest   FundingRequest? @relation(fields: [fundingRequestId], references: [id])
-  fundingRequestId Int?
+  id          Int        @id @default(autoincrement())
+  name        String     @db.VarChar(255)
+  email       String     @unique
+  password    String
+  phoneNumber String     @db.VarChar(20)
+  roleId      Int
+  role        Role       @relation(fields: [roleId], references: [id])
+  lender      Lender?
+  borrower    Borrower?
+  admin       Admin?
+  statusId    Int        @default(1)
+  status      UserStatus @relation(fields: [statusId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Lender {
+  id                Int                 @id @default(autoincrement())
+  userId            Int                 @unique
+  user              User                @relation(fields: [userId], references: [id])
+  identityNumber    String              @unique @db.VarChar(16)
+  identityCard      String
+  accountNumber     String              @unique
+  address           String
+  birthDate         DateTime
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  Review            Review[]
+  Transaction       Transaction[]
+  Wallet            Wallet?
+  TransactionDetail TransactionDetail[]
+}
+
+model Borrower {
+  id             Int        @id @default(autoincrement())
+  userId         Int        @unique
+  user           User       @relation(fields: [userId], references: [id])
+  address        String
+  identityNumber String     @unique @default("") @db.VarChar(16)
+  identityCard   String     @default("")
+  accountNumber  String     @unique @default("")
+  npwp           String     @unique @db.VarChar(16)
+  isInstitution  Boolean    @default(false)
+  documents      Document[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  Review         Review[]
+
+  FundingRequest FundingRequest[]
+}
+
+model Admin {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
-  birthDate DateTime
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Borrower {
-  id             Int             @id @default(autoincrement())
-  userId         Int             @unique
-  user           User            @relation(fields: [userId], references: [id])
-  address        String
-  npwp           String          @unique @db.VarChar(16)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  FundingRequest FundingRequest?
+model Document {
+  id         Int      @id @default(autoincrement())
+  borrowerId Int
+  borrower   Borrower @relation(fields: [borrowerId], references: [id])
+  type       String
+  filePath   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Wallet {
+  id                Int                 @id @default(autoincrement())
+  lenderId          Int                 @unique
+  lender            Lender              @relation(fields: [lenderId], references: [id])
+  balance           Int
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  WalletTransaction WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        Int                   @id @default(autoincrement())
+  walletId  Int
+  wallet    Wallet                @relation(fields: [walletId], references: [id])
+  typeId    Int
+  type      WalletTransactionType @relation(fields: [typeId], references: [id])
+  amount    Int
+  createdAt DateTime              @default(now())
+}
+
+model WalletTransactionType {
+  id                Int                 @id @default(autoincrement())
+  type              String              @unique
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  WalletTransaction WalletTransaction[]
 }
 
 model Sector {
   id             Int              @id @default(autoincrement())
-  name           String           @unique
+  sector         String           @unique
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  FundingRequest FundingRequest[]
+  fundingRequest FundingRequest[]
+}
+
+model FundingAction {
+  id               Int               @id @default(autoincrement())
+  fundingRequestId Int
+  fundingRequest   FundingRequest    @relation(fields: [fundingRequestId], references: [id])
+  typeId           Int
+  type             FundingActionType @relation(fields: [typeId], references: [id])
+  actionBy         Int
+  createdAt        DateTime          @default(now())
+}
+
+model FundingActionType {
+  id            Int             @id @default(autoincrement())
+  type          String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  FundingAction FundingAction[]
+}
+
+model FundingStatus {
+  id             Int              @id @default(autoincrement())
+  status         String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  fundingRequest FundingRequest[]
 }
 
 model FundingRequest {
-  id             Int      @id @default(autoincrement())
-  userId         Int      @unique
-  user           Borrower @relation(fields: [userId], references: [id])
-  title          String   @db.VarChar(255)
-  name           String   @db.VarChar(255)
+  id             Int             @id @default(autoincrement())
+  borrowerId     Int
+  borrower       Borrower        @relation(fields: [borrowerId], references: [id])
+  title          String
   description    String
   image          String
   totalFund      Int
@@ -87,8 +169,46 @@ model FundingRequest {
   returnRate     Float
   fundingExpired DateTime
   sectorId       Int
-  sector         Sector   @relation(fields: [sectorId], references: [id])
-  User           User[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  sector         Sector          @relation(fields: [sectorId], references: [id])
+  status         Int             @default(1)
+  fundingStatus  FundingStatus   @relation(fields: [status], references: [id])
+  fundsRaised    Int             @default(0)
+  isFullyFunded  Boolean         @default(false)
+  actions        FundingAction[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  Transaction    Transaction[]
+}
+
+model Transaction {
+  id               Int                 @id @default(autoincrement())
+  fundingRequestId Int
+  fundingRequest   FundingRequest      @relation(fields: [fundingRequestId], references: [id])
+  totalFundRaised  Int                 @default(0)
+  isFullyFunded    Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  details          TransactionDetail[]
+  Lender           Lender?             @relation(fields: [lenderId], references: [id])
+  lenderId         Int?
+}
+
+model TransactionDetail {
+  id            Int         @id @default(autoincrement())
+  transactionId Int
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  lenderId      Int
+  lender        Lender      @relation(fields: [lenderId], references: [id])
+  amount        Int
+  createdAt     DateTime    @default(now())
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  lenderId   Int
+  lender     Lender   @relation(fields: [lenderId], references: [id])
+  borrowerId Int
+  borrower   Borrower @relation(fields: [borrowerId], references: [id])
+  rating     Int      @default(0)
+  comment    String
+  createdAt  DateTime @default(now())
 }
