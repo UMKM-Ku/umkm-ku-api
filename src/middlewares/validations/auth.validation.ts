@@ -14,7 +14,7 @@ export const RegisterLenderValidation = [
         .matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])/).withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
     body('phoneNumber')
         .notEmpty().withMessage('Phone number is required')
-        .isLength({ min: 13, max: 15 }).withMessage("Phone number must be at least 13 characters long"),
+        .isLength({ min: 10, max: 15 }).withMessage("Phone number must be at least 10 characters long"),
     body('birthDate')
         .notEmpty().withMessage('Birth date is required'),
     body('identityNumber')

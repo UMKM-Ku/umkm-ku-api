@@ -63,11 +63,7 @@ async function RegisterLender(req: Request, res: Response, next: NextFunction) {
 
         res.status(201).json({
             message: 'User registered successfully',
-            data: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-            }
+            data: user,
         });
 
     } catch (error) {
@@ -77,7 +73,7 @@ async function RegisterLender(req: Request, res: Response, next: NextFunction) {
 
 async function RegisterBorrower(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, email, password, phoneNumber, identityNumber, address, npwp, accountNumber, isInstituion } = req.body;
+        const { name, email, password, phoneNumber, identityNumber, address, npwp, accountNumber, isInstitution } = req.body;
 
         const findUser = await prisma.user.findUnique({ where: { email } });
 
@@ -117,7 +113,7 @@ async function RegisterBorrower(req: Request, res: Response, next: NextFunction)
             identityCard: string;
             accountNumber: string;
             npwp: string;
-            isInstituion: boolean;
+            isInstitution: boolean;
             documents?: { create: { type: string; filePath: string; }[] };
         } = {
             address,
@@ -125,10 +121,10 @@ async function RegisterBorrower(req: Request, res: Response, next: NextFunction)
             identityCard: identityCardPath,
             accountNumber,
             npwp,
-            isInstituion: isInstituion === "true",
+            isInstitution: isInstitution === "true",
         };
 
-        if (borrowerData.isInstituion) {
+        if (borrowerData.isInstitution) {
             if (!req.files || !(req.files as { [fieldname: string]: Express.Multer.File[] })['document']) {
                 throw new Error("Document file is required");
             }
@@ -160,11 +156,7 @@ async function RegisterBorrower(req: Request, res: Response, next: NextFunction)
 
         res.status(201).json({
             message: 'User registered successfully',
-            data: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-            }
+            data: user,
         });
 
     } catch (error) {
