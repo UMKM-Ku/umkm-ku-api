@@ -29,6 +29,24 @@ async function firstSeed() {
             create: { status }
         })
     }
+
+    const fundingActionType = ['Publish', 'Extend', 'Withdraw'];
+    for (const action of fundingActionType) {
+        await prisma.fundingActionType.upsert({
+            where: { action },
+            update: {},
+            create: { action }
+        })
+    }
+
+    const walletTransactionType = ['Deposit', 'Withdraw', 'Funding'];
+    for (const type of walletTransactionType) {
+        await prisma.walletTransactionType.upsert({
+            where: { type },
+            update: {},
+            create: { type }
+        })
+    }
 }
 
 export default firstSeed;

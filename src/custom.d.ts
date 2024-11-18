@@ -1,6 +1,14 @@
 export type User = {
+    id: number,
     email: string,
     role: string,
+    roleId?: number,
+    borrower?: {
+        id: number,
+    },
+    lender?: {
+        id: number,
+    }
 }
 
 declare global {

@@ -135,15 +135,15 @@ model FundingAction {
   id               Int               @id @default(autoincrement())
   fundingRequestId Int
   fundingRequest   FundingRequest    @relation(fields: [fundingRequestId], references: [id])
-  typeId           Int
-  type             FundingActionType @relation(fields: [typeId], references: [id])
+  actionTypeId     Int
+  actionType       FundingActionType @relation(fields: [actionTypeId], references: [id])
   actionBy         Int
   createdAt        DateTime          @default(now())
 }
 
 model FundingActionType {
   id            Int             @id @default(autoincrement())
-  type          String          @unique
+  action        String          @unique
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   FundingAction FundingAction[]

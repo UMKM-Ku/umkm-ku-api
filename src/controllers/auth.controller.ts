@@ -192,7 +192,7 @@ async function Login(req: Request, res: Response, next: NextFunction) {
 
         const token = sign(payload, SECRET_KEY as string, { expiresIn: "1hr" });
 
-        res.status(200).send({
+        res.status(200).cookie("access_token", token).send({
             message: "Login successful",
             access_token: token,
         });
