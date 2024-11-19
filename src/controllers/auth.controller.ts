@@ -178,11 +178,12 @@ async function Login(req: Request, res: Response, next: NextFunction) {
         }
 
         const payload = {
+            id: findUser.id,
             email,
             role: findUser.role.name,
         }
 
-        const token = sign(payload, SECRET_KEY as string, { expiresIn: "1hr" });
+        const token = sign(payload, SECRET_KEY as string, { expiresIn: "1d" });
 
         res.status(200).cookie("access_token", token).send({
             message: "Login successful",

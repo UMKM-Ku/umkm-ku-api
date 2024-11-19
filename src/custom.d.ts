@@ -1,14 +1,11 @@
+import { Borrower, Lender } from "@prisma/client";
+
 export type User = {
-    id: number,
-    email: string,
-    role: string,
-    roleId?: number,
-    borrower?: {
-        id: number,
-    },
-    lender?: {
-        id: number,
-    }
+    id: number;
+    email: string;
+    role: string;
+    borrower?: Borrower | null;
+    lender?: Lender | null;
 }
 
 declare global {
