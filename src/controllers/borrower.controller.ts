@@ -6,19 +6,12 @@ const prisma = new PrismaClient();
 
 async function createFundingRequest(req: Request, res: Response, next: NextFunction) {
     try {
-        const { title, description, totalFund, tenor, returRate, sectorId } = req.body;
+        const { title, description, totalFund, tenor, returnRate, sectorId } = req.body;
+
+        const borrowerId = req.user?.borrower?.id;
+        if (!borrowerId) throw new Error("Borrower not found");
 
         if (!req.file) throw new Error("Image is required");
-
-        const borrower = await prisma.borrower.findUnique({
-            where: {
-                userId: req.user?.id,
-            },
-        });
-
-        if (!borrower) throw new Error("Borrower not found");
-
-        const borrowerId = borrower.id;
 
         const newFundingRequest = await prisma.fundingRequest.create({
             data: {
@@ -27,9 +20,9 @@ async function createFundingRequest(req: Request, res: Response, next: NextFunct
                 image: req.file?.path,
                 totalFund: parseInt(totalFund),
                 tenor: parseInt(tenor),
-                returnRate: parseFloat(returRate),
+                returnRate: parseFloat(returnRate),
                 sectorId: parseInt(sectorId),
-                borrowerId: borrowerId,
+                borrowerId,
                 status: 1,
                 fundingExpired: new Date(new Date().setDate(new Date().getDate() + 7)),
             },
@@ -50,7 +43,6 @@ async function editFundingRequest(req: Request, res: Response, next: NextFunctio
         const fundingRequest = await prisma.fundingRequest.findUnique({ where: { id } });
 
         if (!fundingRequest) throw new Error("Funding Request not found");
-        if (fundingRequest.borrowerId !== req.user?.borrower?.id) throw new Error("Unauthorized: You are not the owner of this funding request");
 
         if (req.file && fundingRequest.image) {
             fs.unlinkSync(fundingRequest.image);
