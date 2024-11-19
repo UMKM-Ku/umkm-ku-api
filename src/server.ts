@@ -1,16 +1,25 @@
 import express, { Application } from "express";
-import { PORT as port } from "./utils/envConfig";
+import { BASE_WEB_URL, PORT as port } from "./utils/envConfig";
 import authRouter from "./routes/auth.route";
 import borrowerRouter from "./routes/borrower.route";
 import ErrorMiddleware from "./middlewares/error.middleware";
 import firstSeed from "./utils/firstSeed";
 import { cleanupUploadedFiles } from "./middlewares/cleanupUploadedFiles";
+import cors from "cors";
 
 const PORT = Number(port) || 8083;
 
 const app: Application = express();
 
+app.use(
+    cors({
+        origin: BASE_WEB_URL || 'http://localhost:3000',
+        credentials: true,
+    })
+);
+
 app.use(express.json());
+
 
 app.use("/auth", authRouter);
 app.use('/borrower', borrowerRouter);
