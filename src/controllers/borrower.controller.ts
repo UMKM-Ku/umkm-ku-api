@@ -10,8 +10,15 @@ async function createFundingRequest(req: Request, res: Response, next: NextFunct
 
         if (!req.file) throw new Error("Image is required");
 
-        const borrowerId = req.user?.borrower?.id;
-        if (!borrowerId) throw new Error("Borrower not found");
+        const borrower = await prisma.borrower.findUnique({
+            where: {
+                userId: req.user?.id,
+            },
+        });
+
+        if (!borrower) throw new Error("Borrower not found");
+
+        const borrowerId = borrower.id;
 
         const newFundingRequest = await prisma.fundingRequest.create({
             data: {
@@ -83,7 +90,7 @@ async function requestExtend(req: Request, res: Response, next: NextFunction) {
         const extendAction = await prisma.fundingAction.create({
             data: {
                 fundingRequestId,
-                typeId: 2,
+                actionTypeId: 2,
                 actionBy: req.user?.borrower?.id,
             }
         });

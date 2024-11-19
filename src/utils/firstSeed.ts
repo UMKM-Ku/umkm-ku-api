@@ -47,6 +47,15 @@ async function firstSeed() {
             create: { type }
         })
     }
+
+    const sectors = ['Pertanian', 'Perdagangan', 'Peternakan', 'Tekstil', 'Farmasi', 'Industri', 'Makanan dan Minuman'];
+    for (const sector of sectors) {
+        await prisma.sector.upsert({
+            where: { sector },
+            update: {},
+            create: { sector }
+        })
+    }
 }
 
 export default firstSeed;
