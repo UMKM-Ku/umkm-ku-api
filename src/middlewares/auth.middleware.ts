@@ -21,4 +21,34 @@ async function verifyToken(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export { verifyToken };
+async function BorrowerGuard(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (req.user?.role !== "Borrower") throw new Error("Unauthorized: Only borrowers can access this route");
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function AdminGuard(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (req.user?.role !== "Admin") throw new Error("Unauthorized: Only Admin can access this route");
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function LenderGuard(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (req.user?.role !== "Lender") throw new Error("Unauthorized: Only Lenders can access this route");
+
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
+export { verifyToken, AdminGuard, BorrowerGuard, LenderGuard };

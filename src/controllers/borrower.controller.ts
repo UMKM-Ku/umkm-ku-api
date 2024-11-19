@@ -7,9 +7,7 @@ const prisma = new PrismaClient();
 async function createFundingRequest(req: Request, res: Response, next: NextFunction) {
     try {
         const { title, description, totalFund, tenor, returRate, sectorId } = req.body;
-        const roleBorrower = req.user?.role === "Borrower";
 
-        if (!roleBorrower) throw new Error("Unathorized: Only borrowers can create funding requests");
         if (!req.file) throw new Error("Image is required");
 
         const borrowerId = req.user?.borrower?.id;
