@@ -39,32 +39,54 @@ async function createFundingRequest(req: Request, res: Response, next: NextFunct
 
 async function editFundingRequest(req: Request, res: Response, next: NextFunction) {
     try {
-        const { id, title, description, totalFund, tenor, returnRate, sectorId } = req.body;
-        const fundingRequest = await prisma.fundingRequest.findUnique({ where: { id } });
+        const fundingRequestId = parseInt(req.params.id);
+        const borrowerId = req.user?.borrower?.id;
+
+        if (!borrowerId) throw new Error("Borrower not found");
+
+        const fundingRequest = await prisma.fundingRequest.findFirst({
+            where: { id: fundingRequestId, borrowerId },
+        });
 
         if (!fundingRequest) throw new Error("Funding Request not found");
 
-        if (req.file && fundingRequest.image) {
-            fs.unlinkSync(fundingRequest.image);
+        const { title, description, totalFund, tenor, returnRate, sectorId } = req.body;
+
+        let updatedData: {
+            title?: string;
+            description?: string;
+            totalFund?: number;
+            tenor?: number;
+            returnRate?: number;
+            sectorId?: number;
+            image?: string;
+        } = {
+            title,
+            description,
+            totalFund: totalFund ? parseInt(totalFund) : undefined,
+            tenor: tenor ? parseInt(tenor) : undefined,
+            returnRate: returnRate ? parseFloat(returnRate) : undefined,
+            sectorId: sectorId ? parseInt(sectorId) : undefined,
         }
 
-        const updateFundingRequest = await prisma.fundingRequest.update({
-            where: { id },
-            data: {
-                title,
-                description,
-                image: req.file?.path || fundingRequest.image,
-                totalFund: totalFund ? parseInt(totalFund) : fundingRequest.totalFund,
-                tenor: tenor ? parseInt(tenor) : fundingRequest.tenor,
-                returnRate: returnRate ? parseFloat(returnRate) : fundingRequest.returnRate,
-                sectorId: sectorId ? parseInt(sectorId) : fundingRequest.sectorId,
-            }
-        })
+        updatedData = Object.fromEntries(
+            Object.entries(updatedData).filter(([_, value]) => value !== undefined)
+        );
+
+
+        if (req.file) {
+            updatedData.image = req.file.path;
+        }
+
+        const updatedFundingRequest = await prisma.fundingRequest.update({
+            where: { id: fundingRequestId },
+            data: updatedData,
+        });
 
         res.status(200).json({
             message: "Funding request updated successfully",
-            FundingRequest: updateFundingRequest,
-        })
+            fundingRequest: updatedFundingRequest,
+        });
     } catch (error) {
         next(error);
     }
@@ -95,4 +117,60 @@ async function requestExtend(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export { createFundingRequest, editFundingRequest, requestExtend };
+async function getAllFundingRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+        const borrowerId = req.user?.borrower?.id;
+        if (!borrowerId) throw new Error("Borrower not found");
+
+        const page = parseInt(req.query.page as string) || 1;
+        const pageSize = parseInt(req.query.pageSize as string) || 10;
+        const skip = (page - 1) * pageSize;
+
+        const fundingRequest = await prisma.fundingRequest.findMany({
+            where: { borrowerId },
+            skip,
+            take: pageSize,
+            orderBy: { createdAt: 'desc' },
+        });
+
+        const totalFundingRequest = await prisma.fundingRequest.count({ where: { borrowerId } });
+
+        res.status(200).json({
+            message: "Funding request retrieved successfully",
+            fundingRequest,
+            pagination: {
+                total: totalFundingRequest,
+                page,
+                pageSize,
+                totalPages: Math.ceil(totalFundingRequest / pageSize),
+            }
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function getFundingRequestById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const borrowerId = req?.user?.borrower?.id;
+        const fundingRequestId = parseInt(req.params.id);
+
+        if (!borrowerId) throw new Error("Borrower not found");
+
+        const fundingRequest = await prisma.fundingRequest.findFirst({
+            where: { id: fundingRequestId, borrowerId },
+            include: { sector: true },
+        });
+
+        if (!fundingRequest) throw new Error("Funding Request not found");
+
+        res.status(200).json({
+            message: "Funding request retrieved successfully",
+            fundingRequest,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export { createFundingRequest, editFundingRequest, requestExtend, getAllFundingRequest, getFundingRequestById };
