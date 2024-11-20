@@ -6,64 +6,37 @@ import { SECRET_KEY } from '../utils/envConfig';
 
 const prisma = new PrismaClient();
 
-async function RegisterLender(req: Request, res: Response, next: NextFunction) {
+async function RegisterUser(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, email, password, phoneNumber, birthDate, identityNumber, accountNumber, address } = req.body;
+        const { name, email, password, phoneNumber, role } = req.body;
 
-        const findUser = await prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        })
 
-        if (findUser) throw new Error("Email is already in use");
-
-        if (!req.file) {
-            throw new Error("Identity card file is required");
-        }
-
-        const existingLender = await prisma.lender.findUnique({
-            where: { identityNumber },
-        });
-        if (existingLender) {
-            throw new Error("Identity Number is already in use");
-        }
-
-        const existingAccountNumber = await prisma.lender.findUnique({
-            where: { accountNumber },
-        });
-        if (existingAccountNumber) {
-            throw new Error("Account Number is already in use");
-        }
-
-        const identityCardPath = req.file.path;
+        if (existingUser) throw new Error("Email is already in use");
         const salt = await genSalt(10);
         const hashedPassword = await hash(password, salt);
 
-        let lenderRole = await prisma.role.findUnique({ where: { name: 'Lender' } });
-        if (!lenderRole) {
-            lenderRole = await prisma.role.create({ data: { name: "Lender" } });
-        }
+        const roleId = await prisma.role.findUnique({
+            where: { name: role.toLowerCase() },
+        });
+        if (!roleId) throw new Error('Role not found');
 
-        const user = await prisma.user.create({
+        const newUser = await prisma.user.create({
             data: {
-                name,
                 email,
                 password: hashedPassword,
+                name,
                 phoneNumber,
-                roleId: lenderRole.id,
-                statusId: 1,
-                lender: {
-                    create: {
-                        identityNumber,
-                        identityCard: identityCardPath,
-                        accountNumber,
-                        address,
-                        birthDate: new Date(birthDate),
-                    }
-                },
+                roleId: roleId.id,
+                statusId: 2,
             },
-        });
+        })
 
         res.status(201).json({
             message: 'User registered successfully',
-            data: user,
+            data: newUser,
         });
 
     } catch (error) {
@@ -71,94 +44,121 @@ async function RegisterLender(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-async function RegisterBorrower(req: Request, res: Response, next: NextFunction) {
+async function RegisterLenderDetails(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, email, password, phoneNumber, identityNumber, address, npwp, accountNumber, isInstitution } = req.body;
+        const { address, identityNumber, accountNumber, birthDate } = req.body;
 
-        const findUser = await prisma.user.findUnique({ where: { email } });
+        if (!req.user?.id) throw new Error('User not found');
+        if (!req.file) throw new Error('Identity card is required');
 
-        if (!req.files || !(req.files as { [fieldname: string]: Express.Multer.File[] })['identityCard']) {
-            throw new Error("Identity card file is required");
+        const newLender = await prisma.lender.create({
+            data: {
+                userId: req.user.id,
+                identityNumber,
+                identityCard: req.file.path,
+                accountNumber,
+                address,
+                birthDate: new Date(birthDate),
+            },
+        })
+
+        if (newLender) {
+            await prisma.wallet.create({
+                data: {
+                    lenderId: newLender.id,
+                    balance: 0,
+                },
+            });
         }
 
-        const identityCardPath = (req.files as { [fieldname: string]: Express.Multer.File[] })["identityCard"][0].path;
-
-        if (findUser) throw new Error("Email is already in use");
-
-        const existingBorrower = await prisma.borrower.findUnique({
-            where: { identityNumber },
+        res.status(201).json({
+            message: 'Lender Details registered successfully',
+            data: newLender,
         });
-        if (existingBorrower) {
-            throw new Error("Identity Number is already in use");
-        }
 
-        const existingAccountNumber = await prisma.lender.findUnique({
-            where: { accountNumber },
-        });
-        if (existingAccountNumber) {
-            throw new Error("Account Number is already in use");
-        }
+    } catch (error) {
+        next(error);
+    }
+}
 
-        const salt = await genSalt(10);
-        const hashedPassword = await hash(password, salt);
+async function RegisterBorrowerDetails(req: Request, res: Response, next: NextFunction) {
+    try {
 
-        let borrowerRole = await prisma.role.findUnique({ where: { name: 'Borrower' } });
-        if (!borrowerRole) {
-            borrowerRole = await prisma.role.create({ data: { name: "Borrower" } });
-        }
+        const { address, identityNumber, accountNumber, npwp, isInstitution } = req.body;
 
-        const borrowerData: {
-            address: string;
-            identityNumber: string;
-            identityCard: string;
-            accountNumber: string;
-            npwp: string;
-            isInstitution: boolean;
-            documents?: { create: { type: string; filePath: string; }[] };
-        } = {
+        const identityCard = (req.files as any)?.identityCard?.[0];
+        if (!req.user?.id) throw new Error("User not found");
+        if (!identityCard) throw new Error("Identity card is required");
+
+        // interface BorrowerDetails {
+        //     userId: number;
+        //     address: string;
+        //     identityNumber: string;
+        //     identityCard: string;
+        //     accountNumber: string;
+        //     npwp: string;
+        //     isInstitution: boolean;
+        //     documents?: { create: { type: string; filePath: string }[] };
+        // }
+
+        const borrowerDetails = {
+            userId: req.user.id,
             address,
             identityNumber,
-            identityCard: identityCardPath,
+            identityCard: identityCard.path,
             accountNumber,
             npwp,
             isInstitution: isInstitution === "true",
         };
 
-        if (borrowerData.isInstitution) {
-            if (!req.files || !(req.files as { [fieldname: string]: Express.Multer.File[] })['document']) {
-                throw new Error("Document file is required");
+        // await prisma.$transaction(async (tx) => {
+        //     const borrower = await tx.borrower.create({
+        //         data: borrowerDetails,
+        //     });
+
+        //     if (borrowerDetails.isInstitution) {
+        //         const documentFiles = req.files as { [fieldname: string]: Express.Multer.File[] };
+        //         if (!documentFiles.documents || documentFiles.documents.length !== 3) {
+        //             throw new Error("Institution borrower must have 3 documents");
+        //         }
+
+        //         const documentData = documentFiles.documents.map((doc) => ({
+        //             borrowerId: borrower.id,
+        //             type: doc.fieldname,
+        //             filePath: doc.path,
+        //         }));
+
+        //         await tx.document.createMany({
+        //             data: documentData
+        //         });
+        //     }
+        // });
+
+        let documents: { type: string; filePath: string }[] = [];
+        if (borrowerDetails.isInstitution) {
+            const documentFiles = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (!documentFiles.documents || documentFiles.documents.length !== 3) {
+                throw new Error("Institution borrower must have 3 documents");
             }
 
-            const documentPath = (req.files as { [fieldname: string]: Express.Multer.File[] })["document"][0].path;
-            borrowerData.documents = {
-                create: [
-                    {
-                        type: "institution_document",
-                        filePath: documentPath
-                    }
-                ]
-            }
+            documents = documentFiles.documents.map((doc) => ({
+                type: doc.fieldname,
+                filePath: doc.path,
+            }));
         }
 
-        const user = await prisma.user.create({
+        const borrower = await prisma.borrower.create({
             data: {
-                name,
-                email,
-                password: hashedPassword,
-                phoneNumber,
-                roleId: borrowerRole.id,
-                statusId: 1,
-                borrower: {
-                    create: borrowerData
+                ...borrowerDetails,
+                documents: {
+                    create: documents,
                 },
             },
         });
 
         res.status(201).json({
-            message: 'User registered successfully',
-            data: user,
+            message: "Borrower Details registered successfully",
         });
-
     } catch (error) {
         next(error);
     }
@@ -194,4 +194,4 @@ async function Login(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export { RegisterLender, RegisterBorrower, Login };
+export { RegisterUser, RegisterLenderDetails, RegisterBorrowerDetails, Login };
