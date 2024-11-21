@@ -15,22 +15,22 @@
 
 */
 -- DropIndex
-DROP INDEX `User_accountNumber_key` ON `user`;
+DROP INDEX `User_accountNumber_key` ON `User`;
 
 -- AlterTable
-ALTER TABLE `borrower` ADD COLUMN `accountNumber` VARCHAR(191) NOT NULL DEFAULT '',
+ALTER TABLE `Borrower` ADD COLUMN `accountNumber` VARCHAR(191) NOT NULL DEFAULT '',
     ADD COLUMN `identityCard` VARCHAR(191) NOT NULL DEFAULT '',
     ADD COLUMN `identityNumber` VARCHAR(16) NOT NULL DEFAULT '',
     ADD COLUMN `isInstitution` BOOLEAN NOT NULL DEFAULT false;
 
 -- AlterTable
-ALTER TABLE `lender` ADD COLUMN `accountNumber` VARCHAR(191) NOT NULL,
+ALTER TABLE `Lender` ADD COLUMN `accountNumber` VARCHAR(191) NOT NULL,
     ADD COLUMN `address` VARCHAR(191) NOT NULL,
     ADD COLUMN `identityCard` VARCHAR(191) NOT NULL,
     ADD COLUMN `identityNumber` VARCHAR(16) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `user` DROP COLUMN `accountNumber`,
+ALTER TABLE `User` DROP COLUMN `accountNumber`,
     DROP COLUMN `identityCard`,
     DROP COLUMN `identityNumber`;
 

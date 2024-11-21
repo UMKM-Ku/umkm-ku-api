@@ -8,11 +8,11 @@
 
 */
 -- AlterTable
-ALTER TABLE `fundingaction` DROP COLUMN `actionType`,
+ALTER TABLE `FundingAction` DROP COLUMN `actionType`,
     ADD COLUMN `typeId` INTEGER NOT NULL;
 
 -- AlterTable
-ALTER TABLE `wallettransaction` DROP COLUMN `type`,
+ALTER TABLE `WalletTransaction` DROP COLUMN `type`,
     ADD COLUMN `typeId` INTEGER NOT NULL;
 
 -- CreateTable

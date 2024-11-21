@@ -9,16 +9,16 @@
 
 */
 -- DropIndex
-DROP INDEX `Borrower_accountNumber_key` ON `borrower`;
+DROP INDEX `Borrower_accountNumber_key` ON `Borrower`;
 
 -- AlterTable
-ALTER TABLE `borrower` DROP COLUMN `accountNumber`;
+ALTER TABLE `Borrower` DROP COLUMN `accountNumber`;
 
 -- AlterTable
-ALTER TABLE `lender` ADD COLUMN `birthDate` DATETIME(3) NOT NULL;
+ALTER TABLE `Lender` ADD COLUMN `birthDate` DATETIME(3) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `user` DROP COLUMN `birthDate`,
+ALTER TABLE `User` DROP COLUMN `birthDate`,
     ADD COLUMN `accountNumber` VARCHAR(50) NOT NULL,
     MODIFY `password` VARCHAR(191) NOT NULL;
 

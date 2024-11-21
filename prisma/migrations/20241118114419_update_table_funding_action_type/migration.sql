@@ -7,10 +7,10 @@
 
 */
 -- DropIndex
-DROP INDEX `FundingActionType_type_key` ON `fundingactiontype`;
+DROP INDEX `FundingActionType_type_key` ON `FundingActionType`;
 
 -- AlterTable
-ALTER TABLE `fundingactiontype` DROP COLUMN `type`,
+ALTER TABLE `FundingActionType` DROP COLUMN `type`,
     ADD COLUMN `action` VARCHAR(191) NOT NULL;
 
 -- CreateIndex

@@ -50,12 +50,13 @@ async function RegisterLenderDetails(req: Request, res: Response, next: NextFunc
 
         if (!req.user?.id) throw new Error('User not found');
         if (!req.file) throw new Error('Identity card is required');
+        const identityCardUrl = (req.file as any).path
 
         const newLender = await prisma.lender.create({
             data: {
                 userId: req.user.id,
                 identityNumber,
-                identityCard: req.file.path,
+                identityCard: identityCardUrl,
                 accountNumber,
                 address,
                 birthDate: new Date(birthDate),
@@ -86,9 +87,9 @@ async function RegisterBorrowerDetails(req: Request, res: Response, next: NextFu
 
         const { address, identityNumber, accountNumber, npwp, isInstitution } = req.body;
 
-        const identityCard = (req.files as any)?.identityCard?.[0];
         if (!req.user?.id) throw new Error("User not found");
-        if (!identityCard) throw new Error("Identity card is required");
+        if (!req.file) throw new Error("Identity card is required");
+        const identityCardUrl = (req.file as any).path
 
         // interface BorrowerDetails {
         //     userId: number;
@@ -105,7 +106,7 @@ async function RegisterBorrowerDetails(req: Request, res: Response, next: NextFu
             userId: req.user.id,
             address,
             identityNumber,
-            identityCard: identityCard.path,
+            identityCard: identityCardUrl,
             accountNumber,
             npwp,
             isInstitution: isInstitution === "true",
@@ -158,6 +159,7 @@ async function RegisterBorrowerDetails(req: Request, res: Response, next: NextFu
 
         res.status(201).json({
             message: "Borrower Details registered successfully",
+            borrower,
         });
     } catch (error) {
         next(error);

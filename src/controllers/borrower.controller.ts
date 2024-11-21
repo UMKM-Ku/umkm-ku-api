@@ -12,18 +12,19 @@ async function createFundingRequest(req: Request, res: Response, next: NextFunct
         if (!borrowerId) throw new Error("Borrower not found");
 
         if (!req.file) throw new Error("Image is required");
+        const imageUrl = (req.file as any).path
 
         const newFundingRequest = await prisma.fundingRequest.create({
             data: {
                 title,
                 description,
-                image: req.file?.path,
+                image: imageUrl,
                 totalFund: parseInt(totalFund),
                 tenor: parseInt(tenor),
                 returnRate: parseFloat(returnRate),
                 sectorId: parseInt(sectorId),
                 borrowerId,
-                status: 1,
+                status: 2,
                 fundingExpired: new Date(new Date().setDate(new Date().getDate() + 7)),
             },
         });
