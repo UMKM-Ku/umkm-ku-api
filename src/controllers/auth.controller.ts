@@ -47,7 +47,6 @@ async function RegisterUser(req: Request, res: Response, next: NextFunction) {
 async function RegisterLenderDetails(req: Request, res: Response, next: NextFunction) {
     try {
         const { address, identityNumber, accountNumber, birthDate } = req.body;
-
         if (!req.user?.id) throw new Error('User not found');
         if (!req.file) throw new Error('Identity card is required');
         const identityCardUrl = (req.file as any).path

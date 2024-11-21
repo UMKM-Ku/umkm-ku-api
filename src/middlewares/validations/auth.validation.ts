@@ -6,7 +6,7 @@ export const RegisterUserValidation = [
         .notEmpty().withMessage('Name is required')
         .isLength({ min: 3 }).withMessage('Name must be at least 3 characters long'),
     body('email')
-        .notEmpty().withMessage("Email is required")
+        .notEmpty().withMessage("Email is required").trim()
         .isEmail().withMessage('Invalid email format'),
     body('password')
         .notEmpty().withMessage('Password is required')
@@ -29,9 +29,10 @@ export const RegisterUserValidation = [
     }
 ];
 
-export const RegisterLenderValidation = [
+export const RegisterLenderDetailValidation = [
     body('birthDate')
-        .notEmpty().withMessage('Birth date is required'),
+        .notEmpty().withMessage('Birth date is required')
+        .isISO8601().withMessage("Birth date must be a valid date (YYYY-MM-DD)"),
     body('identityNumber')
         .notEmpty().withMessage('Identity number is required')
         .isLength({ min: 16, max: 16 }).withMessage('Identity number must be 16 characters long'),
@@ -51,7 +52,7 @@ export const RegisterLenderValidation = [
     },
 ];
 
-export const RegisterBorrowerValidation = [
+export const RegisterBorrowerDetailValidation = [
     body('identityNumber')
         .notEmpty().withMessage('Identity number is required')
         .isLength({ min: 16, max: 16 }).withMessage('Identity number must be 16 characters long'),
