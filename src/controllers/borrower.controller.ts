@@ -173,4 +173,21 @@ async function getFundingRequestById(req: Request, res: Response, next: NextFunc
     }
 }
 
-export { createFundingRequest, editFundingRequest, requestExtend, getAllFundingRequest, getFundingRequestById };
+async function getReview(req: Request, res: Response, next: NextFunction) {
+    const { borrowerId } = req.params
+    try {
+        const reviews = await prisma.review.findMany({
+            where: { borrowerId: parseInt(borrowerId) },
+            include: { lender: true },
+        });
+
+        res.status(200).json({
+            message: "Reviews fetched successfully",
+            reviews,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export { createFundingRequest, editFundingRequest, requestExtend, getAllFundingRequest, getFundingRequestById, getReview };
