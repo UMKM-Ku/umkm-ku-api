@@ -204,4 +204,28 @@ async function filterFundingRequests(req: Request, res: Response, next: NextFunc
     }
 }
 
-export { depositWallet, getPublishedFundingRequests, getFundingRequestDetails, createFundingTransaction, filterFundingRequests }
+async function addReview(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { lenderId, borrowerId, rating, comment } = req.body;
+
+        if (rating < 1 || rating > 5) throw new Error("Invalid rating, rating must be between 1 and 5");
+
+        const review = await prisma.review.create({
+            data: {
+                lenderId,
+                borrowerId,
+                rating,
+                comment,
+            }
+        });
+
+        res.status(201).json({
+            message: "Review added successfully",
+            review
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export { depositWallet, getPublishedFundingRequests, getFundingRequestDetails, createFundingTransaction, filterFundingRequests, addReview };
