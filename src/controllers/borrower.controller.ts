@@ -23,7 +23,7 @@ async function createFundingRequest(req: Request, res: Response, next: NextFunct
                 tenor: parseInt(tenor),
                 returnRate: parseFloat(returnRate),
                 sectorId: parseInt(sectorId),
-                borrowerId,
+                borrowerId: borrowerId,
                 status: 2,
                 fundingExpired: new Date(new Date().setDate(new Date().getDate() + 7)),
             },

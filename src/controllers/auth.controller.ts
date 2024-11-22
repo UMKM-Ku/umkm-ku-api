@@ -87,8 +87,10 @@ async function RegisterBorrowerDetails(req: Request, res: Response, next: NextFu
         const { address, identityNumber, accountNumber, npwp, isInstitution } = req.body;
 
         if (!req.user?.id) throw new Error("User not found");
-        if (!req.file) throw new Error("Identity card is required");
-        const identityCardUrl = (req.file as any).path
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        const identityCardFile = files.identityCard?.[0];
+        if (!identityCardFile) throw new Error("Identity card is required");
+        const identityCardUrl = identityCardFile.path;
 
         // interface BorrowerDetails {
         //     userId: number;

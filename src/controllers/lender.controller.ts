@@ -229,7 +229,7 @@ async function addReview(req: Request, res: Response, next: NextFunction) {
 }
 
 async function getFundingHistory(req: Request, res: Response, next: NextFunction) {
-    const lenderId = req.user?.id;
+    const lenderId = req.user?.lender?.id;
     try {
         const fundingHistory = await prisma.transactionDetail.findMany({
             where: { lenderId },
