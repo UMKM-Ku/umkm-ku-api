@@ -228,4 +228,50 @@ async function addReview(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export { depositWallet, getPublishedFundingRequests, getFundingRequestDetails, createFundingTransaction, filterFundingRequests, addReview };
+async function getFundingHistory(req: Request, res: Response, next: NextFunction) {
+    const lenderId = req.user?.id;
+    try {
+        const fundingHistory = await prisma.transactionDetail.findMany({
+            where: { lenderId },
+            include: {
+                transaction: {
+                    include: {
+                        fundingRequest: {
+                            select: {
+                                id: true,
+                                title: true,
+                                borrower: {
+                                    select: {
+                                        id: true,
+                                        user: {
+                                            select: {
+                                                name: true,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const formattedHistory = fundingHistory.map((detail) => ({
+            fundingRequestId: detail.transaction.fundingRequest.id,
+            title: detail.transaction.fundingRequest.title,
+            borrowerId: detail.transaction.fundingRequest.borrower.id,
+            borrowerName: detail.transaction.fundingRequest.borrower.user.name,
+            fundedAmount: detail.amount
+        }));
+
+        res.status(200).json({
+            message: "Funding history fetched successfully",
+            history: formattedHistory,
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+export { depositWallet, getPublishedFundingRequests, getFundingRequestDetails, createFundingTransaction, filterFundingRequests, addReview, getFundingHistory };

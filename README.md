@@ -1,20 +1,20 @@
 # UMKM-KU API
 
-UMKM-KU API is a backend service for managing user registrations and logins for lenders and borrowers. This project uses Express.js, Prisma, and TypeScript.
+UMKM-KU API adalah layanan backend untuk mengelola pendaftaran dan login pengguna untuk pemberi pinjaman dan peminjam. Proyek ini menggunakan Express.js, Prisma, dan TypeScript.
 
-## Table of Contents
+## Daftar Isi
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [Validation](#validation)
-- [Error Handling](#error-handling)
-- [Environment Variables](#environment-variables)
-- [License](#license)
+- [Instalasi](#instalasi)
+- [Penggunaan](#penggunaan)
+- [Endpoint API](#endpoint-api)
+- [Validasi](#validasi)
+- [Penanganan Kesalahan](#penanganan-kesalahan)
+- [Variabel Lingkungan](#variabel-lingkungan)
+- [Lisensi](#lisensi)
 
-## Installation
+## Instalasi
 
-1. Clone the repository:
+1. Clone repository:
 
    ```bash
    git clone https://github.com/UMKM-Ku/umkm-ku-api.git
@@ -47,9 +47,9 @@ The API server will be running at `http://localhost:8083`. You can use tools lik
 
 ### Auth Routes
 
-- **POST /auth/register-lender**
+- **POST /auth/register/user**
 
-  Registers a new lender.
+  Mendaftarkan pengguna baru.
 
   **Request Body:**
 
@@ -59,10 +59,7 @@ The API server will be running at `http://localhost:8083`. You can use tools lik
     "email": "john.doe@example.com",
     "password": "Password123!",
     "phoneNumber": "1234567890123",
-    "birthDate": "1990-01-01",
-    "identityNumber": "1234567890123456",
-    "identityCard": "path/to/identity/card",
-    "accountNumber": "1234567890"
+    "role": "Lender"
   }
   ```
 
@@ -75,23 +72,18 @@ The API server will be running at `http://localhost:8083`. You can use tools lik
   }
   ```
 
-- **POST /auth/register-borrower**
+- **POST /auth/register-lender**
 
-  Registers a new borrower.
+  Mendaftarkan pemberi pinjaman baru..
 
   **Request Body:**
 
   ```json
   {
-    "name": "Jane Doe",
-    "email": "jane.doe@example.com",
-    "password": "Password123!",
-    "phoneNumber": "1234567890123",
-    "identityNumber": "1234567890123456",
-    "identityCard": "path/to/identity/card",
     "address": "123 Main St",
-    "npwp": "1234567890",
-    "accountNumber": "1234567890"
+    "identityNumber": "1234567890123456",
+    "accountNumber": "1234567890",
+    "birthDate": "1990-01-01"
   }
   ```
 
@@ -99,8 +91,33 @@ The API server will be running at `http://localhost:8083`. You can use tools lik
 
   ```json
   {
-      "message": "User registered successfully",
-      "data": { ... }
+    "message": "Lender Details registered successfully",
+    "data": { ... }
+  }
+  ```
+
+- **POST /auth/register-borrower**
+
+  Mendaftarkan peminjam baru.
+
+  **Request Body:**
+
+  ```json
+  {
+    "address": "123 Main St",
+    "identityNumber": "1234567890123456",
+    "accountNumber": "1234567890",
+    "npwp": "1234567890",
+    "isInstitution": true
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Borrower Details registered successfully",
+    "data": { ... }
   }
   ```
 
@@ -123,6 +140,240 @@ The API server will be running at `http://localhost:8083`. You can use tools lik
   {
     "message": "Login successful",
     "access_token": "..."
+  }
+  ```
+
+- **POST /borrower/create**
+
+  Membuat permintaan pendanaan baru.
+
+  **Request Body:**
+
+  ```json
+  {
+    "title": "Funding Title",
+    "description": "Funding Description",
+    "totalFund": 1000000,
+    "tenor": 12,
+    "returnRate": 5.5,
+    "sectorId": 1
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding request created successfully",
+    "FundingRequest": { ... }
+  }
+  ```
+
+- **PUT /borrower/edit/:id**
+
+  Mengedit permintaan pendanaan.
+
+  **Request Body:**
+
+  ```json
+  {
+    "title": "Updated Title",
+    "description": "Updated Description",
+    "totalFund": 2000000,
+    "tenor": 24,
+    "returnRate": 6.0,
+    "sectorId": 2
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding request updated successfully",
+    "fundingRequest": { ... }
+  }
+  ```
+
+- **POST /borrower/extend**
+
+  Meminta perpanjangan permintaan pendanaan.
+
+  **Request Body:**
+
+  ```json
+  {
+    "fundingRequestId": 1
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding request extension requested successfully",
+    "FundingAction": { ... }
+  }
+  ```
+
+- **GET /borrower/funding-requests**
+
+  Mendapatkan semua permintaan pendanaan peminjam.
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding request retrieved successfully",
+    "fundingRequest": [ ... ],
+    "pagination": { ... }
+  }
+  ```
+
+- **GET /borrower/funding-requests/:id**
+
+  Mendapatkan permintaan pendanaan berdasarkan ID.
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding request retrieved successfully",
+    "fundingRequest": { ... }
+  }
+  ```
+
+- **GET /borrower/:borrowerId/reviews**
+
+  Mendapatkan ulasan untuk peminjam.
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Reviews fetched successfully",
+    "reviews": [ ... ]
+  }
+  ```
+
+- **POST /lender/wallet/deposit**
+
+  Menyetor dana ke dompet pemberi pinjaman.
+
+  **Request Body:**
+
+  ```json
+  {
+    "amount": 1000000
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Deposit successful",
+    "wallet": { ... }
+  }
+  ```
+
+- **GET /lender/fundings**
+
+  Mendapatkan semua permintaan pendanaan yang dipublikasikan.
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Published funding requests",
+    "fundingRequests": [ ... ],
+    "pagination": { ... }
+  }
+  ```
+
+- **GET /lender/fundings/:id**
+
+  Mendapatkan detail permintaan pendanaan berdasarkan ID.
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding request details fetched successfully",
+    "fundingRequest": { ... }
+  }
+  ```
+
+- **POST /lender/fundings/transaction**
+
+  Membuat transaksi pendanaan.
+
+  **Request Body:**
+
+  ```json
+  {
+    "fundingRequestId": 1,
+    "amount": 500000
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Funding transaction created successfully",
+    "transaction": { ... },
+    "updatedFundingRequest": { ... }
+  }
+  ```
+
+- **GET /lender/fundings/filter**
+
+  Memfilter permintaan pendanaan.
+
+  **Request Query:**
+
+  ```json
+  {
+    "returnRate": 5.5,
+    "sectorId": 1,
+    "totalFund": 1000000,
+    "page": 1,
+    "pageSize": 10
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Filtered funding requests fetched successfully",
+    "fundingRequests": [ ... ],
+    "pagination": { ... }
+  }
+  ```
+
+- **POST /lender/review**
+
+  Menambahkan ulasan untuk peminjam.
+
+  **Request Body:**
+
+  ```json
+  {
+    "lenderId": 1,
+    "borrowerId": 2,
+    "rating": 5,
+    "comment": "Great borrower!"
+  }
+  ```
+
+  **Response:**
+
+  ```json
+  {
+    "message": "Review added successfully",
+    "review": { ... }
   }
   ```
 
